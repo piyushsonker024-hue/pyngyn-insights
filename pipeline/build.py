@@ -8,6 +8,7 @@ WEB = ROOT / "web"
 VENDOR = WEB / "vendor"
 OUT = ROOT / "out" / "dashboard.html"
 
+
 # (css family name, file stem, weight)
 FONTS = [
     ("Bricolage Grotesque", "bricolage-grotesque-latin-700-normal", 700),
