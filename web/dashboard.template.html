@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pyngyn — Delivery Insights</title>
+<style>
+/*__FONTS__*/
+</style>
+<script>//__CHARTJS__</script>
+<style>
+  :root{
+    --ink:#14202E;
+    --ink-2:#41536A;
+    --ink-3:#7A8A9C;
+    --paper:#E7EBEF;
+    --surface:#FBFCFD;
+    --rule:#C3CDD7;
+    --rule-soft:#DBE2E8;
+    --slip:#B03A48;
+    --slip-soft:#E8D2D5;
+    --ahead:#2F7A78;
+    --hold:#C77D1E;
+    --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+    --display:"Bricolage Grotesque","Helvetica Neue",Arial,sans-serif;
+    --serif:"Source Serif 4",Georgia,"Times New Roman",serif;
+  }
+
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:var(--serif);
+    font-size:16px;
+    line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1180px;margin:0 auto;padding:0 28px 96px}
+
+  .eyebrow{
+    font-family:var(--mono);
+    font-size:11px;
+    font-weight:500;
+    letter-spacing:.16em;
+    text-transform:uppercase;
+    color:var(--ink-3);
+  }
+
+  /* ---------- masthead ---------- */
+  .masthead{
+    display:flex;align-items:baseline;justify-content:space-between;gap:24px;
+    padding:26px 0 0;flex-wrap:wrap;
+  }
+  .mark{font-family:var(--display);font-weight:800;font-size:15px;letter-spacing:-.01em;color:var(--ink)}
+  .mark span{color:var(--ink-3);font-weight:500}
+
+  /* ---------- hero ---------- */
+  .hero{padding:56px 0 40px;border-bottom:1px solid var(--rule)}
+  .thesis{
+    font-family:var(--display);
+    font-weight:700;
+    font-size:clamp(30px,4.6vw,54px);
+    line-height:1.04;
+    letter-spacing:-.03em;
+    margin:14px 0 0;
+    max-width:17ch;
+  }
+  .thesis em{font-style:normal;color:var(--slip)}
+  .sub{
+    font-size:17px;color:var(--ink-2);max-width:52ch;margin:18px 0 0;
+  }
+  .hero-do{
+    display:inline-flex;gap:10px;align-items:baseline;max-width:52ch;
+    margin:22px 0 0;padding:11px 15px 11px 13px;
+    background:var(--surface);border-left:3px solid var(--slip);
+    font-size:14.5px;color:var(--ink);
+  }
+  .hero-do::before{
+    content:"DO";font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.12em;
+    color:var(--slip);flex:none;
+  }
+
+  /* the gap, rendered literally */
+  .gap{margin:44px 0 0}
+  .gap-rail{position:relative;height:44px}
+  .gap-track{
+    position:absolute;top:19px;left:0;right:0;height:6px;background:var(--rule-soft);
+  }
+  .gap-plan{position:absolute;top:19px;left:0;height:6px;background:var(--ink);width:67.5%}
+  .gap-over{
+    position:absolute;top:19px;height:6px;background:var(--slip);
+    left:67.5%;right:0;
+    transform-origin:left center;
+  }
+  .gap-tick{position:absolute;top:8px;width:1px;height:28px;background:var(--ink)}
+  .gap-labels{display:flex;justify-content:space-between;gap:16px;margin-top:6px}
+  .gap-lab{font-family:var(--mono);font-size:12px;color:var(--ink-2)}
+  .gap-lab b{display:block;font-size:19px;font-weight:600;color:var(--ink);letter-spacing:-.02em}
+  .gap-lab.over b{color:var(--slip)}
+  .gap-lab.over{text-align:right}
+
+  /* ---------- stat strip ---------- */
+  .strip{
+    display:grid;grid-template-columns:repeat(4,1fr);gap:1px;
+    background:var(--rule);border-top:1px solid var(--rule);
+    margin-top:40px;
+  }
+  .stat{background:var(--paper);padding:18px 20px 16px}
+  .stat b{
+    display:block;font-family:var(--mono);font-size:24px;font-weight:600;
+    letter-spacing:-.03em;color:var(--ink);
+  }
+  .stat span{display:block;margin-top:3px;font-size:13px;color:var(--ink-3);font-family:var(--serif)}
+
+  /* ---------- layout ---------- */
+  .cols{display:grid;grid-template-columns:1fr 1fr;gap:44px;padding-top:52px;align-items:start}
+  .panel-head{
+    display:flex;align-items:baseline;justify-content:space-between;gap:16px;
+    padding-bottom:12px;border-bottom:1.5px solid var(--ink);margin-bottom:22px;flex-wrap:wrap;
+  }
+  .panel-title{font-family:var(--display);font-weight:700;font-size:19px;letter-spacing:-.02em;margin:0}
+
+  /* ---------- insights ---------- */
+  .insight{
+    background:var(--surface);
+    border:1px solid var(--rule-soft);
+    border-left:3px solid var(--ink-3);
+    padding:20px 22px;
+    margin-bottom:14px;
+  }
+  .insight[data-sev="critical"]{border-left-color:var(--slip)}
+  .insight[data-sev="warning"]{border-left-color:var(--hold)}
+  .insight[data-sev="watch"]{border-left-color:var(--ahead)}
+  .i-top{display:flex;align-items:baseline;justify-content:space-between;gap:14px;margin-bottom:9px}
+  .sev{
+    font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--ink-3);white-space:nowrap;
+  }
+  .insight[data-sev="critical"] .sev{color:var(--slip)}
+  .insight[data-sev="warning"] .sev{color:var(--hold)}
+  .insight[data-sev="watch"] .sev{color:var(--ahead)}
+  .i-head{
+    font-family:var(--display);font-weight:700;font-size:20px;line-height:1.2;
+    letter-spacing:-.02em;margin:0;
+  }
+  .i-body{margin:0;font-size:15.5px;color:var(--ink-2);line-height:1.6}
+  .i-metric{
+    display:flex;align-items:baseline;gap:9px;margin:14px 0 12px;
+    padding:9px 12px;background:var(--paper);
+  }
+  .i-metric b{font-family:var(--mono);font-size:19px;font-weight:600;letter-spacing:-.03em}
+  .insight[data-sev="critical"] .i-metric b{color:var(--slip)}
+  .insight[data-sev="warning"] .i-metric b{color:var(--hold)}
+  .insight[data-sev="watch"] .i-metric b{color:var(--ahead)}
+  .i-metric span{font-family:var(--mono);font-size:11px;color:var(--ink-3);letter-spacing:.02em}
+  .i-action{
+    margin:12px 0 0;padding-top:12px;border-top:1px dotted var(--rule);
+    font-size:14px;color:var(--ink);display:flex;gap:9px;
+  }
+  .i-action::before{
+    content:"DO";font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.12em;
+    color:var(--ink-3);padding-top:4px;flex:none;
+  }
+
+  /* ---------- slip rail (signature) ---------- */
+  .rail-card{background:var(--surface);border:1px solid var(--rule-soft);padding:24px 22px 18px;margin-bottom:26px}
+  .seg{display:inline-flex;border:1px solid var(--rule);background:var(--paper)}
+  .seg button{
+    font-family:var(--mono);font-size:10.5px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;
+    padding:6px 12px;border:0;background:transparent;color:var(--ink-3);cursor:pointer;
+  }
+  .seg button + button{border-left:1px solid var(--rule)}
+  .seg button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+  .seg button:focus-visible{outline:2px solid var(--slip);outline-offset:1px}
+  .rail-note{font-size:13.5px;color:var(--ink-2);margin:14px 0 0;line-height:1.5}
+  .rail-note b{font-family:var(--mono);font-size:12.5px;font-weight:600;color:var(--ink)}
+
+  svg{display:block;width:100%;height:auto}
+  .r-name{font-family:var(--mono);font-size:11.5px;fill:var(--ink);}
+  .r-val{font-family:var(--mono);font-size:11px;font-weight:600}
+  .r-axis{font-family:var(--mono);font-size:9.5px;fill:var(--ink-3);letter-spacing:.06em}
+  .r-bar{transform-origin:var(--bx) center}
+  .r-hit:hover + .r-lift,.r-row:hover .r-bar{opacity:.82}
+
+  .chart-card{background:var(--surface);border:1px solid var(--rule-soft);padding:24px 22px 18px}
+  .chart-box{position:relative;height:290px;margin-top:4px}
+  .legend{display:flex;gap:16px;flex-wrap:wrap;margin-top:14px}
+  .legend i{width:9px;height:9px;border-radius:50%;display:inline-block;margin-right:6px}
+  .legend span{font-family:var(--mono);font-size:10.5px;color:var(--ink-2);letter-spacing:.04em}
+
+  /* ---------- table ---------- */
+  .table-sec{padding-top:56px}
+  .table-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  table{width:100%;min-width:560px;border-collapse:collapse;font-family:var(--mono);font-size:12.5px}
+  thead th{
+    text-align:left;font-weight:500;font-size:10px;letter-spacing:.13em;text-transform:uppercase;
+    color:var(--ink-3);padding:0 12px 9px 0;border-bottom:1px solid var(--rule);
+  }
+  tbody td{padding:11px 12px 11px 0;border-bottom:1px solid var(--rule-soft);color:var(--ink-2)}
+  tbody td:first-child{color:var(--ink);font-weight:500}
+  .num{text-align:right}
+  .over{color:var(--slip);font-weight:600}
+  .pill{
+    font-size:10px;letter-spacing:.06em;padding:2px 7px;border:1px solid var(--rule);
+    color:var(--ink-2);white-space:nowrap;
+  }
+  .pill.blocked{border-color:var(--hold);color:var(--hold)}
+
+  footer{
+    margin-top:64px;padding-top:18px;border-top:1px solid var(--rule);
+    display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;
+    font-family:var(--mono);font-size:10.5px;color:var(--ink-3);letter-spacing:.04em;
+  }
+
+  @media (max-width:900px){
+    .cols{grid-template-columns:1fr;gap:44px}
+    .strip{grid-template-columns:1fr 1fr}
+    .wrap{padding:0 18px 64px}
+    .thesis{max-width:none}
+  }
+
+  /* one orchestrated load: the bars leave the baseline */
+  @media (prefers-reduced-motion:no-preference){
+    .r-bar{animation:depart .5s cubic-bezier(.2,.8,.3,1) backwards}
+    @keyframes depart{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+    .gap-over{animation:depart .7s .25s cubic-bezier(.2,.8,.3,1) backwards}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="masthead">
+    <div class="mark">PYNGYN <span>/ delivery insights</span></div>
+    <div class="eyebrow" id="stamp"></div>
+  </div>
+
+  <header class="hero">
+    <div class="eyebrow" id="heroBrow"></div>
+    <h1 class="thesis" id="thesis"></h1>
+    <p class="sub" id="sub"></p>
+    <p class="hero-do" id="heroDo"></p>
+
+    <div class="gap">
+      <div class="gap-rail">
+        <div class="gap-track"></div>
+        <div class="gap-plan" id="gapPlan"></div>
+        <div class="gap-over" id="gapOver"></div>
+        <div class="gap-tick" id="gapTick"></div>
+      </div>
+      <div class="gap-labels">
+        <div class="gap-lab"><b id="planH"></b>estimated</div>
+        <div class="gap-lab over"><b id="overH"></b>actually spent</div>
+      </div>
+    </div>
+
+    <div class="strip" id="strip"></div>
+  </header>
+
+  <div class="cols">
+    <section>
+      <div class="panel-head">
+        <h2 class="panel-title">What else it found</h2>
+        <div class="eyebrow" id="src"></div>
+      </div>
+      <div id="insights"></div>
+    </section>
+
+    <section>
+      <div class="rail-card">
+        <div class="panel-head" style="border-bottom-width:1px">
+          <h2 class="panel-title">Slip rail</h2>
+          <div class="seg" id="seg">
+            <button data-cut="by_size" aria-pressed="true">Task size</button>
+            <button data-cut="by_assignee" aria-pressed="false">Assignee</button>
+            <button data-cut="by_status" aria-pressed="false">Status</button>
+          </div>
+        </div>
+        <svg id="rail" viewBox="0 0 560 260" role="img" aria-labelledby="railTitle">
+          <title id="railTitle">Median slip against estimate</title>
+        </svg>
+        <p class="rail-note" id="railNote"></p>
+      </div>
+
+      <div class="chart-card">
+        <div class="panel-head" style="border-bottom-width:1px">
+          <h2 class="panel-title">Every task against its estimate</h2>
+          <div class="eyebrow">Above the line = over</div>
+        </div>
+        <div class="chart-box"><canvas id="scatter"></canvas></div>
+        <div class="legend" id="legend"></div>
+      </div>
+    </section>
+  </div>
+
+  <section class="table-sec">
+    <div class="panel-head">
+      <h2 class="panel-title">The tasks doing the damage</h2>
+      <div class="eyebrow">Ranked by hours over estimate</div>
+    </div>
+    <div class="table-scroll">
+    <table>
+      <thead><tr>
+        <th>Task</th><th>Assignee</th><th>Status</th>
+        <th class="num">Est</th><th class="num">Actual</th><th class="num">Over by</th><th class="num">Slip</th>
+      </tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+    </div>
+  </section>
+
+  <footer>
+    <div>PYNGYN · AI INSIGHTS PROTOTYPE</div>
+    <div id="foot"></div>
+  </footer>
+</div>
+
+<script>
+const DATA = __DATA__;
+
+const H = DATA.stats.headline, C = DATA.stats.concentration, W = DATA.stats.wip_exposure;
+const SEV_COLOR = {critical:"#B03A48", warning:"#C77D1E", watch:"#2F7A78"};
+const STATUS_COLOR = {"Done":"#41536A","In Progress":"#2F7A78","In Review":"#C77D1E","Blocked":"#B03A48"};
+const fmt = n => Number(n).toLocaleString(undefined,{maximumFractionDigits:1});
+
+/* ---------- masthead + hero ---------- */
+document.getElementById("stamp").textContent =
+  "Generated " + new Date(DATA.generated_at).toLocaleString(undefined,
+    {day:"2-digit",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit"});
+document.getElementById("foot").textContent =
+  DATA.stats.headline.task_count + " TASKS · " + DATA.insights.source.toUpperCase();
+document.getElementById("src").textContent =
+  (DATA.insights.insights.length - 1) + " findings · " + DATA.insights.source;
+
+/* The hero is the model's most severe finding, verbatim. Nothing on this page
+   is a claim a human typed in by hand -- Python computed it, Claude phrased it. */
+const TOP = DATA.insights.insights[0];
+document.getElementById("heroBrow").textContent =
+  "Most severe finding · " + fmt(H.task_count) + " tasks read";
+document.getElementById("thesis").textContent = TOP.headline;
+document.getElementById("sub").textContent = TOP.body;
+document.getElementById("heroDo").textContent = TOP.action;
+
+document.getElementById("planH").textContent = fmt(H.estimated_hours) + "h";
+document.getElementById("overH").textContent = fmt(H.actual_hours) + "h";
+const planShare = H.estimated_hours / H.actual_hours * 100;
+document.getElementById("gapPlan").style.width = planShare + "%";
+document.getElementById("gapOver").style.left = planShare + "%";
+document.getElementById("gapTick").style.left = planShare + "%";
+
+const STRIP = [
+  [H.portfolio_slip_pct.toFixed(1) + "%", "over estimate across the period"],
+  [H.on_target_rate_pct.toFixed(1) + "%", "of tasks landed within ±10%"],
+  [fmt(C.tasks_causing_half_of_overrun) + " tasks", "caused half the overrun"],
+  [fmt(W.hours_sunk_in_blocked_work) + "h", "sunk into blocked work"]
+];
+document.getElementById("strip").innerHTML = STRIP
+  .map(([v,l]) => `<div class="stat"><b>${v}</b><span>${l}</span></div>`).join("");
+
+/* ---------- insights ---------- */
+const esc = s => String(s).replace(/[&<>]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
+document.getElementById("insights").innerHTML = DATA.insights.insights.slice(1).map(i => `
+  <article class="insight" data-sev="${esc(i.severity)}">
+    <div class="i-top">
+      <h3 class="i-head">${esc(i.headline)}</h3>
+      <div class="sev">${esc(i.severity)}</div>
+    </div>
+    <div class="i-metric"><b>${esc(i.metric)}</b><span>${esc(i.metric_label)}</span></div>
+    <p class="i-body">${esc(i.body)}</p>
+    <p class="i-action">${esc(i.action)}</p>
+  </article>`).join("");
+
+/* ---------- slip rail: one baseline = the estimate ---------- */
+const CUTS = {
+  by_size:     {key:"size_bucket", note:d => `Estimates hold on small work and come apart on large work. The <b>${d[d.length-1].size_bucket}</b> cohort is only ${d[d.length-1].tasks} tasks but carries <b>${fmt(d[d.length-1].overrun_hours)}h</b> of overrun.`},
+  by_assignee: {key:"assignee",    note:d => `A stable multiple is a calibration gap, not a speed problem. <b>${d[0].assignee}</b> runs ${d[0].median_slip_pct > 0 ? "+" : ""}${d[0].median_slip_pct}% median across ${d[0].tasks} tasks.`},
+  by_status:   {key:"status",      note:d => `The clock runs whether or not the task moves. <b>Blocked</b> work carries the worst slip of any status.`}
+};
+let cut = "by_size";
+
+function drawRail(){
+  const rows = DATA.stats[cut].slice();
+  const {key, note} = CUTS[cut];
+  const svg = document.getElementById("rail");
+  const W_ = 560, PAD_L = 92, PAD_R = 46, TOP = 30;
+  const rowH = 34, H_ = TOP + rows.length * rowH + 22;
+  svg.setAttribute("viewBox", `0 0 ${W_} ${H_}`);
+
+  const vals = rows.map(r => r.median_slip_pct);
+  const lo = Math.min(-12, Math.min(...vals) * 1.15);
+  const hi = Math.max(20, Math.max(...vals) * 1.15);
+  const plot = W_ - PAD_L - PAD_R;
+  const x = v => PAD_L + (v - lo) / (hi - lo) * plot;
+  const zero = x(0);
+
+  const ticks = [];
+  const step = hi > 80 ? 25 : 10;
+  for (let t = Math.ceil(lo/step)*step; t <= hi; t += step) ticks.push(t);
+
+  let g = "";
+  ticks.forEach(t => {
+    g += `<line x1="${x(t)}" y1="${TOP-8}" x2="${x(t)}" y2="${H_-22}" stroke="${t===0?"#14202E":"#DBE2E8"}" stroke-width="${t===0?1.5:1}"/>`;
+    g += `<text class="r-axis" x="${x(t)}" y="${H_-8}" text-anchor="middle">${t>0?"+":""}${t}%</text>`;
+  });
+  g += `<text class="r-axis" x="${zero}" y="${TOP-16}" text-anchor="middle" fill="#14202E">ESTIMATE</text>`;
+
+  rows.forEach((r, i) => {
+    const y = TOP + i * rowH + 6, v = r.median_slip_pct;
+    const bx = v >= 0 ? zero : x(v), bw = Math.max(1.5, Math.abs(x(v) - zero));
+    const col = v >= 0 ? "#B03A48" : "#2F7A78";
+    g += `<g class="r-row">
+      <text class="r-name" x="${PAD_L-12}" y="${y+15}" text-anchor="end">${esc(r[key])}</text>
+      <rect class="r-bar" x="${bx}" y="${y+3}" width="${bw}" height="17" fill="${col}"
+            style="--bx:${v>=0?bx:bx+bw}px; transform-origin:${v>=0?bx:bx+bw}px center; animation-delay:${i*60}ms"/>
+      <text class="r-val" x="${v>=0?bx+bw+7:bx-7}" y="${y+16}" fill="${col}"
+            text-anchor="${v>=0?"start":"end"}">${v>0?"+":""}${v}%</text>
+    </g>`;
+  });
+
+  svg.innerHTML = `<title id="railTitle">Median slip against estimate</title>` + g;
+  document.getElementById("railNote").innerHTML = note(rows);
+}
+
+document.getElementById("seg").addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b) return;
+  cut = b.dataset.cut;
+  [...e.currentTarget.querySelectorAll("button")]
+    .forEach(x => x.setAttribute("aria-pressed", String(x === b)));
+  drawRail();
+});
+drawRail();
+
+/* ---------- parity scatter ---------- */
+document.getElementById("legend").innerHTML = Object.entries(STATUS_COLOR)
+  .map(([k,v]) => `<span><i style="background:${v}"></i>${k.toUpperCase()}</span>`).join("")
+  + `<span><i style="background:#14202E;border-radius:0;width:14px;height:2px"></i>ON ESTIMATE</span>`;
+
+if (window.Chart) {
+  const vals = DATA.stats.scatter.flatMap(t => [t.estimated_hours, t.actual_hours]);
+  const min = Math.min(...vals) * 0.8, max = Math.max(...vals) * 1.25;
+  const TICKS = [0.5, 1, 2, 4, 8, 16, 32, 64].filter(t => t >= min && t <= max);
+  const sets = Object.keys(STATUS_COLOR).map(s => ({
+    label: s,
+    data: DATA.stats.scatter.filter(t => t.status === s)
+             .map(t => ({x:t.estimated_hours, y:t.actual_hours, id:t.task_id, who:t.assignee})),
+    backgroundColor: STATUS_COLOR[s] + "CC",
+    borderColor: "transparent",
+    pointRadius: 3.5, pointHoverRadius: 6
+  }));
+  sets.push({
+    type:"line", label:"On estimate", data:[{x:min,y:min},{x:max,y:max}],
+    borderColor:"#14202E", borderWidth:1.5, borderDash:[5,4],
+    pointRadius:0, fill:false, tension:0
+  });
+
+  new Chart(document.getElementById("scatter"), {
+    type:"scatter",
+    data:{datasets:sets},
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      animation:{duration: matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 500},
+      scales:{
+        x:{type:"logarithmic", min:min, max:max,
+           title:{display:true, text:"ESTIMATED HOURS (LOG)",
+             font:{family:"IBM Plex Mono", size:9.5}, color:"#7A8A9C"},
+           grid:{color:"#DBE2E8"}, border:{color:"#C3CDD7"},
+           afterBuildTicks: ax => { ax.ticks = TICKS.map(v => ({value:v})); },
+           ticks:{font:{family:"IBM Plex Mono", size:10}, color:"#7A8A9C",
+                  callback: v => TICKS.includes(v) ? v + "h" : null}},
+        y:{type:"logarithmic", min:min, max:max,
+           title:{display:true, text:"ACTUAL HOURS (LOG)",
+             font:{family:"IBM Plex Mono", size:9.5}, color:"#7A8A9C"},
+           grid:{color:"#DBE2E8"}, border:{color:"#C3CDD7"},
+           afterBuildTicks: ax => { ax.ticks = TICKS.map(v => ({value:v})); },
+           ticks:{font:{family:"IBM Plex Mono", size:10}, color:"#7A8A9C",
+                  callback: v => TICKS.includes(v) ? v + "h" : null}}
+      },
+      plugins:{
+        legend:{display:false},
+        tooltip:{
+          backgroundColor:"#14202E", padding:10, cornerRadius:0,
+          titleFont:{family:"IBM Plex Mono", size:11},
+          bodyFont:{family:"IBM Plex Mono", size:10.5},
+          displayColors:false,
+          callbacks:{
+            title: c => c[0].raw.id ? c[0].raw.id + " · " + c[0].raw.who : "",
+            label: c => c.raw.id ? [`est ${c.raw.x}h → actual ${c.raw.y}h`,
+                                    `${c.raw.y > c.raw.x ? "+" : ""}${Math.round((c.raw.y/c.raw.x-1)*100)}%`] : ""
+          }
+        }
+      }
+    }
+  });
+}
+
+/* ---------- table ---------- */
+document.getElementById("tbody").innerHTML = DATA.stats.worst_tasks.map(t => `
+  <tr>
+    <td>${esc(t.task_id)}</td>
+    <td>${esc(t.assignee)}</td>
+    <td><span class="pill ${t.status === "Blocked" ? "blocked" : ""}">${esc(t.status)}</span></td>
+    <td class="num">${fmt(t.estimated_hours)}h</td>
+    <td class="num">${fmt(t.actual_hours)}h</td>
+    <td class="num over">+${fmt(t.variance_hours)}h</td>
+    <td class="num over">+${Math.round(t.slip_pct)}%</td>
+  </tr>`).join("");
+</script>
+</body>
+</html>
