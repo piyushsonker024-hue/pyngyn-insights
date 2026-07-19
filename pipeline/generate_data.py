@@ -1,21 +1,3 @@
-"""
-Simulate task-level time tracking data for Pyngyn.
-
-Columns match the brief exactly:
-    task_id, assignee, estimated_hours, actual_hours, status
-
-The generator plants a few real bottlenecks in the data so the analysis has
-something true to find. Nothing downstream knows what was planted -- analyze.py
-rediscovers it from the CSV alone.
-
-Planted signals:
-  1. Estimation accuracy collapses on large tasks (>16h estimates).
-  2. One assignee (priya.n) systematically under-estimates their own work.
-  3. One assignee (marco.r) sandbags -- consistently finishes under estimate.
-  4. "Blocked" and "In Review" tasks accumulate hours while producing nothing.
-  5. Overrun is Pareto-concentrated: a few tasks cause most of the damage.
-"""
-
 import csv
 import random
 from pathlib import Path

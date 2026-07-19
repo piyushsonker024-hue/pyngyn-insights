@@ -1,13 +1,3 @@
-"""
-Analyze task-level time tracking data and locate bottlenecks.
-
-Reads  : data/tasks.csv
-Writes : out/stats.json   (the raw numbers, consumed by insights.py and the dashboard)
-
-The analysis deliberately produces *comparisons*, not just totals -- a bottleneck
-is only visible relative to something else (a baseline, a peer, a cohort).
-"""
-
 import json
 import os
 from pathlib import Path
@@ -30,7 +20,7 @@ def bucket_for(est):
             return label
     return SIZE_BUCKETS[0][2]
 
-
+# abstract away rounding to avoid cluttering the main logic with it
 def r(x, n=1):
     return round(float(x), n)
 

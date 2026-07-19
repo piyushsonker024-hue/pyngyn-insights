@@ -1,16 +1,3 @@
-"""
-Inline everything into a single self-contained dashboard file.
-
-Reads  : out/stats.json, out/insights.json, web/dashboard.template.html,
-         web/vendor/* (Chart.js + three typefaces -- see web/vendor/README.md)
-Writes : out/dashboard.html
-
-The output makes zero external requests: no CDN, no font service, no backend, no
-build tooling. Open it with a double click, email it to someone, drop it behind
-any static host, or read it on a plane. That costs ~350kb of inlined assets,
-which is a fair trade for a dashboard that renders identically everywhere.
-"""
-
 import base64
 import json
 from datetime import datetime, timezone
