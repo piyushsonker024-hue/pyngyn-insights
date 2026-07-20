@@ -1,22 +1,3 @@
-"""
-Turn raw stats into plain-English insights using Claude.
-
-Reads  : out/stats.json
-Writes : out/insights.json
-
-Runs in one of two modes:
-
-  live   -- ANTHROPIC_API_KEY is set. Calls the Messages API and regenerates
-            insights from whatever is currently in stats.json.
-  cached -- no key. Falls back to out/insights.cached.json so the dashboard
-            still builds and runs. The cached file was produced by this exact
-            prompt against this exact stats.json.
-
-Only the aggregates go to the model, never the raw task rows: it keeps the
-prompt small, keeps the numbers authoritative, and means the model is writing
-*about* the analysis rather than redoing it.
-"""
-
 import json
 import os
 import sys
